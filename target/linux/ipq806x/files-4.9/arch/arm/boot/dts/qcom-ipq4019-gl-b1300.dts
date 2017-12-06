@@ -1,0 +1,240 @@
+/* Copyright (c) 2015, The Linux Foundation. All rights reserved.
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ */
+
+#include "qcom-ipq4019-ap.dk01.1.dtsi"
+#include "qcom-ipq4019-bus.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/soc/qcom,tcsr.h>
+
+/ {
+	model = "GL-B1300";
+	compatible = "glinet, b1300", "qcom,ipq4019";
+	
+	chosen {
+		bootargs = "rootfsname=rootfs rootwait";
+	};
+	
+	reserved-memory {
+		#address-cells = <0x1>;
+		#size-cells = <0x1>;
+		ranges;
+
+		rsvd1@87E00000 {
+			reg = <0x87e00000 0x200000>;
+			no-map;
+		};
+	};
+	
+	soc {
+		tcsr@194b000 {
+			/* select hostmode */
+			compatible = "qcom,tcsr";
+			reg = <0x194b000 0x100>;
+			qcom,usb-hsphy-mode-select = <TCSR_USB_HSPHY_HOST_MODE>;
+			status = "ok";
+		};
+
+		ess_tcsr@1953000 {
+			compatible = "qcom,tcsr";
+			reg = <0x1953000 0x1000>;
+			qcom,ess-interface-select = <TCSR_ESS_PSGMII>;
+		};
+
+
+		tcsr@1949000 {
+			compatible = "qcom,tcsr";
+			reg = <0x1949000 0x100>;
+			qcom,wifi_glb_cfg = <TCSR_WIFI_GLB_CFG>;
+		};
+
+		tcsr@1957000 {
+			compatible = "qcom,tcsr";
+			reg = <0x1957000 0x100>;
+			qcom,wifi_noc_memtype_m0_m2 = <TCSR_WIFI_NOC_MEMTYPE_M0_M2>;
+		};
+
+		counter@4a1000 {
+			compatible = "qcom,qca-gcnt";
+			reg = <0x4a1000 0x4>;
+		};
+
+		mdio@90000 {
+			status = "okay";
+		};
+
+		qca8075: ess-switch@c000000 {
+			status = "okay";
+		};
+
+		ess-psgmii@98000 {
+			status = "okay";
+		};
+
+		edma@c080000 {
+			status = "okay";
+			
+			/delete-node/ gmac0;
+			
+			gmac0: gmac0 {
+				local-mac-address = [00 00 00 00 00 00];
+				qcom,phy_mdio_addr = <4>;
+				qcom,poll_required = <1>;
+				qcom,forced_speed = <1000>;
+				qcom,forced_duplex = <1>;
+				vlan_tag = <2 0x20>;
+			};
+			
+			/delete-node/ gmac1;
+			
+			gmac1: gmac1 {
+				local-mac-address = [00 00 00 00 00 00];
+				vlan_tag = <1 0x1f>;
+			};
+		};
+
+		wifi@a000000 {
+			core-id = <0x0>;
+			status = "okay";
+			qca,msi_addr = <0x0b006040>;
+			qca,msi_base = <0x40>;
+			qcom,mtd-name = "ART";
+			qcom,cal-offset = <0x1000>;
+			qcom,cal-len = <12064>;
+		};
+
+		wifi@a800000 {
+			core-id = <0x1>;
+			status = "okay";
+			qca,msi_addr = <0x0b006040>;
+			qca,msi_base = <0x50>;
+			qcom,mtd-name = "ART";
+			qcom,cal-offset = <0x5000>;
+			qcom,cal-len = <12064>;
+		};
+
+		cryptobam: dma@8e04000 {
+			status = "okay";
+		};
+
+		crypto@8e3a000 {
+			status = "okay";
+		};
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+
+		wps {
+			label = "wps";
+			gpios = <&tlmm 5 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_WPS_BUTTON>;
+		};
+		reset {
+			label = "reset";
+			gpios = <&tlmm 63 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_RESTART>;
+		};
+	};
+	
+	gpio-leds {
+		compatible = "gpio-leds";
+
+		power {
+			label = "b1300:green:power";
+			gpios = <&tlmm 4 GPIO_ACTIVE_HIGH>;
+			default-state = "on";
+		};
+		mesh {
+			label = "b1300:green:mesh";
+			gpios = <&tlmm 3 GPIO_ACTIVE_HIGH>;
+		};
+		wlan {
+			label = "b1300:green:wlan";
+			gpios = <&tlmm 2 GPIO_ACTIVE_HIGH>;
+		};
+	};
+};
+
+&spi_0 { /* BLSP1 QUP1 */
+	status = "ok";
+
+	mx25l25635e@0 {
+		status = "disabled";
+	};
+
+	mx25l25635f@0 {
+		compatible = "mx25l25635f", "jedec,spi-nor";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0>;
+		spi-max-frequency = <24000000>;
+		status = "ok";
+		m25p,fast-read;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition0@0 {
+				label = "SBL1";
+				reg = <0x00000000 0x00040000>;
+				read-only;
+			};
+			partition1@40000 {
+				label = "MIBIB";
+				reg = <0x00040000 0x00020000>;
+				read-only;
+			};
+			partition2@60000 {
+				label = "QSEE";
+				reg = <0x00060000 0x00060000>;
+				read-only;
+			};
+			partition3@c0000 {
+				label = "CDT";
+				reg = <0x000c0000 0x00010000>;
+				read-only;
+			};
+			partition4@d0000 {
+				label = "DDRPARAMS";
+				reg = <0x000d0000 0x00010000>;
+				read-only;
+			};
+			partition5@e0000 {
+				label = "APPSBLENV"; /* u-boot env*/
+				reg = <0x000e0000 0x00010000>;
+				read-only;
+			};
+			partition6@f0000 {
+				label = "APPSBL"; /* u-boot */
+				reg = <0x000f0000 0x00080000>;
+				read-only;
+			};
+			partition7@170000 {
+				/* make a backup of this partition! */
+				label = "ART";
+				reg = <0x00170000 0x00010000>;
+				read-only;
+			};
+			partition8@180000 {
+				label = "firmware";
+				reg = <0x00180000 0x01A00000>;
+			};
+		};
+	};
+};

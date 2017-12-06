@@ -47,7 +47,8 @@ board=$(board_name)
 case "$FIRMWARE" in
 "ath10k/pre-cal-ahb-a000000.wifi.bin")
 	case "$board" in
-	ap-dk01.1-c1)
+	ap-dk01.1-c1 |\
+	b1300)
 		ath10kcal_extract "ART" 4096 12064
 		;;
 	fritz4040)
@@ -57,7 +58,8 @@ case "$FIRMWARE" in
 	;;
 "ath10k/pre-cal-ahb-a800000.wifi.bin")
 	case "$board" in
-	ap-dk01.1-c1)
+	ap-dk01.1-c1 |\
+	b1300)
 		ath10kcal_extract "ART" 20480 12064
 		;;
 	fritz4040)
