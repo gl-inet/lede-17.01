@@ -96,7 +96,7 @@ define U-Boot/Hummingbird_A31
   NAME:=Hummingbird A31 board
 endef
 
-define U-Boot/Marsboard
+define U-Boot/Marsboard_A10
   BUILD_SUBTARGET:=cortexa8
   NAME:=Marsboard
   BUILD_DEVICES:=sun4i-a10-marsboard
@@ -130,6 +130,12 @@ define U-Boot/Lamobo_R1
   BUILD_SUBTARGET:=cortexa7
   NAME:=Lamobo R1
   BUILD_DEVICES:=sun7i-a20-lamobo-r1
+endef
+
+define U-Boot/nanopi_m1_plus
+  BUILD_SUBTARGET:=cortexa7
+  NAME:=NanoPi M1 Plus (H3)
+  BUILD_DEVICES:=sun8i-h3-nanopi-m1-plus
 endef
 
 define U-Boot/nanopi_neo
@@ -183,11 +189,13 @@ UBOOT_TARGETS := \
 	Cubieboard2 \
 	Cubietruck \
 	Hummingbird_A31 \
+	Marsboard_A10 \
 	Mele_M9 \
 	OLIMEX_A13_SOM \
 	Linksprite_pcDuino \
 	Linksprite_pcDuino3 \
 	Lamobo_R1 \
+	nanopi_m1_plus \
 	nanopi_neo \
 	orangepi_r1 \
 	orangepi_plus \
