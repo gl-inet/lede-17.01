@@ -55,7 +55,7 @@ menu "Gl.iNet package choice shortcut"
 		select PACKAGE_kmod-i2c-core
 		select PACKAGE_comgt
 		select PACKAGE_chat
-		select PACKAGE_ip
+		select PACKAGE_ip-full
 		select PACKAGE_kmod-nls-cp437
 		select PACKAGE_kmod-nls-iso8859-1
 		select PACKAGE_kmod-nls-utf8
