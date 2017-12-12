@@ -1,0 +1,221 @@
+--- a/target/linux/ramips/base-files/etc/board.d/01_leds
++++ b/target/linux/ramips/base-files/etc/board.d/01_leds
+@@ -180,6 +180,9 @@ gl-mt300n|\
+ gl-mt750)
+ 	set_wifi_led "$board:wlan"
+ 	;;
++gl-mt300n-v2)
++	set_wifi_led "$board:wlan" "ra0"
++	;;
+ hc5661)
+ 	ucidef_set_led_default "system" "system" "$board:blue:system" "1"
+ 	ucidef_set_led_netdev "internet" "internet" "$board:blue:internet" "eth0.2"
+--- a/target/linux/ramips/base-files/etc/board.d/02_network
++++ b/target/linux/ramips/base-files/etc/board.d/02_network
+@@ -155,6 +155,10 @@ ramips_setup_interfaces()
+ 		ucidef_add_switch "switch0" \
+ 			"1:lan" "2:lan" "3:lan" "4:lan" "0:wan" "6@eth0"
+ 		;;
++	gl-mt300n-v2)
++		ucidef_add_switch "switch0" \
++			"1:lan" "0:wan" "6@eth0"
++		;;
+ 	awapn2403)
+ 		ucidef_add_switch "switch0" \
+ 			"0:lan" "1:wan" "6@eth0"
+@@ -439,6 +443,10 @@ ramips_setup_macs()
+ 		wan_mac="$(grep -m1 mac= "/dev/mtd${index}" | cut -d= -f2)"
+ 		lan_mac=$wan_mac
+ 		;;
++	gl-mt300n-v2)
++		lan_mac=$(mtd_get_mac_binary factory 4)
++		wan_mac=$(mtd_get_mac_binary factory 4)
++		;;
+ 	*)
+ 		lan_mac=$(cat /sys/class/net/eth0/address)
+ 		wan_mac=$(macaddr_add "$lan_mac" 1)
+--- a/target/linux/ramips/base-files/lib/ramips.sh
++++ b/target/linux/ramips/base-files/lib/ramips.sh
+@@ -214,6 +214,9 @@ ramips_board_detect() {
+ 	*"GL-MT750")
+ 		name="gl-mt750"
+ 		;;
++	*"GL-MT300N-V2")
++		name="gl-mt300n-v2"
++		;;
+ 	*"HC5661")
+ 		name="hc5661"
+ 		;;
+--- a/target/linux/ramips/base-files/lib/upgrade/platform.sh
++++ b/target/linux/ramips/base-files/lib/upgrade/platform.sh
+@@ -61,6 +61,7 @@ platform_check_image() {
+ 	gl-mt300a|\
+ 	gl-mt300n|\
+ 	gl-mt750|\
++	gl-mt300n-v2|\
+ 	hc5*61|\
+ 	hg255d|\
+ 	hlk-rm04|\
+--- /dev/null
++++ b/target/linux/ramips/dts/GL-MT300N-V2.dts
+@@ -0,0 +1,147 @@
++/dts-v1/;
++
++#include "mt7628an.dtsi"
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
++
++/{
++	compatible = "gl-inet,gl-mt300n-v2", "ralink,mt7628an-soc";
++	model = "GL-MT300N-V2";
++
++	chosen {
++		bootargs = "console=ttyS0,115200";
++	};
++
++	memory@0 {
++		device_type = "memory";
++		reg = <0x0 0x8000000>;
++	};
++
++	gpio-leds {
++		compatible = "gpio-leds";
++
++		power {
++			label = "gl-mt300n-v2:power";
++			default-state = "on";
++			gpios = <&gpio1 10 GPIO_ACTIVE_LOW>;
++		};
++
++		wan {
++			label = "gl-mt300n-v2:wan";
++			gpios = <&gpio1 11 GPIO_ACTIVE_LOW>;
++		};
++
++		wlan {
++			label = "gl-mt300n-v2:wlan";
++			gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
++		};
++	};
++
++	gpio-keys {
++		compatible = "gpio-keys-polled";
++		#address-cells = <1>;
++		#size-cells = <0>;
++		poll-interval = <20>;
++
++		reset {
++			label = "reset";
++			gpios = <&gpio1 6 GPIO_ACTIVE_LOW>;
++			linux,code = <KEY_RESTART>;
++		};
++
++		BTN_0 {
++			label = "BTN_0";
++			gpios = <&gpio0 0 GPIO_ACTIVE_LOW>;
++			linux,code = <BTN_0>;
++		};
++
++		BTN_1 {
++			label = "BTN_1";
++			gpios = <&gpio0 3 GPIO_ACTIVE_LOW>;
++			linux,code = <BTN_1>;
++		};
++	};
++
++	gpio_export {
++		compatible = "gpio-export";
++		#size-cells = <0>;
++
++		usbpow {
++			gpio-export,name = "usbpow";
++			gpio-export,output = <1>;
++			gpios = <&gpio0 11 GPIO_ACTIVE_LOW>;
++		};
++	};
++
++};
++
++&pinctrl {
++	state_default: pinctrl0 {
++		gpio {
++			ralink,group = "wdt", "gpio", "wled_an", "p0led_an", "p1led_an", "i2c", "i2s", "uart1";
++			ralink,function = "gpio";
++		};
++	};
++};
++
++&ethernet {
++	mtd-mac-address = <&factory 0x4>;
++};
++
++&wmac {
++	status = "okay";
++	ralink,mtd-eeprom = <&factory 0x4>;
++};
++
++&spi0 {
++	status = "okay";
++
++	m25p80@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "jedec,spi-nor";
++		reg = <0>;
++		spi-max-frequency = <10000000>;
++		m25p,chunked-io = <32>;
++
++		partition@0 {
++			label = "u-boot";
++			reg = <0x0 0x30000>;
++			read-only;
++		};
++
++		partition@30000 {
++			label = "u-boot-env";
++			reg = <0x30000 0x10000>;
++			read-only;
++		};
++
++		factory: partition@40000 {
++			label = "factory";
++			reg = <0x40000 0x10000>;
++			read-only;
++		};
++
++		partition@50000 {
++			label = "firmware";
++			reg = <0x50000 0xfb0000>;
++		};
++	};
++};
++
++&sdhci {
++	status = "okay";
++};
++
++&ehci {
++	status = "okay";
++};
++
++&ohci {
++	status = "okay";
++};
++
++&esw {
++	mediatek,portmap = "wllll";
++};
+--- a/target/linux/ramips/image/mt7628.mk
++++ b/target/linux/ramips/image/mt7628.mk
+@@ -57,3 +57,10 @@ define Device/mac1200r-v2
+ endef
+ TARGET_DEVICES += mac1200r-v2
+ 
++define Device/gl-mt300n-v2
++  DTS := GL-MT300N-V2
++  IMAGE_SIZE := $(ralink_default_fw_size_16M)
++  DEVICE_TITLE := GL-iNet GL-MT300N-V2
++  DEVICE_PACKAGES := kmod-usb2 kmod-usb-ohci kmod-usb-ledtrig-usbport
++endef
++TARGET_DEVICES += gl-mt300n-v2
