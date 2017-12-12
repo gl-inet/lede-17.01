@@ -239,6 +239,7 @@ platform_check_image() {
 	ew-dorin|\
 	gl-ar150|\
 	gl-ar300m|\
+	gl-ar750|\
 	gl-ar300|\
 	gl-domino|\
 	gl-mifi|\

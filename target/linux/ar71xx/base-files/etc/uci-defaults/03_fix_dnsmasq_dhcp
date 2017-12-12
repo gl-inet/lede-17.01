@@ -1,0 +1,32 @@
+#!/bin/sh
+#
+# Copyright (C) 2013 OpenWrt.org
+#
+
+. /lib/functions.sh
+
+config_dnsmasq_dhcp()
+{
+		uci set dhcp.@dhcp[0].force=1
+		uci commit dhcp
+		uci set wireless.radio0.doth=0
+		uci commit wireless
+}
+
+
+
+. /lib/ar71xx.sh
+
+board=$(ar71xx_board_name)
+
+case "$board" in
+	gl-ar750)
+	config_dnsmasq_dhcp
+	;;
+*)
+	;;
+esac
+
+
+exit 0
+
