@@ -25,3 +25,8 @@ key-build*
 .emacs.desktop*
 TAGS*~
 git-src
+firmware.yml
+scripts/gl_image
+/release
+/package/gli-pri
+/.pc
