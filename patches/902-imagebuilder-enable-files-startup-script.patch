@@ -1,0 +1,16 @@
+--- a/target/imagebuilder/files/Makefile
++++ b/target/imagebuilder/files/Makefile
+@@ -162,6 +162,13 @@ package_postinst: FORCE
+ 			IPKG_INSTROOT=$(TARGET_DIR) $$(which bash) $$script; \
+ 		done || true \
+ 	)
++	@( \
++		cd $(TARGET_DIR); \
++		for script in ./etc/init.d/*; do \
++			grep '#!/bin/sh /etc/rc.common' $$script >/dev/null || continue; \
++			IPKG_INSTROOT=$(TARGET_DIR) $$(which bash) ./etc/rc.common $$script enable; \
++		done || true \
++	)
+ 	rm -f $(TARGET_DIR)/usr/lib/opkg/info/*.postinst
+ 	$(if $(CONFIG_CLEAN_IPKG),rm -rf $(TARGET_DIR)/usr/lib/opkg)
+ 
