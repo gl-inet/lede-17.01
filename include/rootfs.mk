@@ -45,6 +45,17 @@ opkg = \
 	--add-arch all:100 \
 	--add-arch $(if $(ARCH_PACKAGES),$(ARCH_PACKAGES),$(BOARD)):200
 
+CUSTOM_OPKG:= \
+  IPKG_NO_SCRIPT=1 \
+  IPKG_INSTROOT="$(TARGET_DIR)" \
+  $(STAGING_DIR_HOST)/bin/opkg \
+	--force-overwrite \
+	--force-postinstall \
+	--offline-root $(TARGET_DIR) \
+	--add-dest root:/ \
+	--add-arch all:100 \
+	--add-arch $(if $(ARCH_PACKAGES),$(ARCH_PACKAGES),$(BOARD)):200
+
 TARGET_DIR_ORIG := $(TARGET_ROOTFS_DIR)/root.orig-$(BOARD)
 
 ifdef CONFIG_CLEAN_IPKG

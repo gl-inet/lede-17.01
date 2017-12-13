@@ -1,0 +1,50 @@
+--- a/include/rootfs.mk
++++ b/include/rootfs.mk
+@@ -45,6 +45,17 @@ opkg = \
+ 	--add-arch all:100 \
+ 	--add-arch $(if $(ARCH_PACKAGES),$(ARCH_PACKAGES),$(BOARD)):200
+ 
++CUSTOM_OPKG:= \
++  IPKG_NO_SCRIPT=1 \
++  IPKG_INSTROOT="$(TARGET_DIR)" \
++  $(STAGING_DIR_HOST)/bin/opkg \
++	--force-overwrite \
++	--force-postinstall \
++	--offline-root $(TARGET_DIR) \
++	--add-dest root:/ \
++	--add-arch all:100 \
++	--add-arch $(if $(ARCH_PACKAGES),$(ARCH_PACKAGES),$(BOARD)):200
++
+ TARGET_DIR_ORIG := $(TARGET_ROOTFS_DIR)/root.orig-$(BOARD)
+ 
+ ifdef CONFIG_CLEAN_IPKG
+--- a/package/Makefile
++++ b/package/Makefile
+@@ -31,6 +31,10 @@ ifneq ($(IGNORE_ERRORS),)
+   $(curdir)/builddirs-ignore-host-compile := $(package-ignore-subdirs)
+ endif
+ 
++ifneq ($(PACKAGES),)
++CUSTOM_PACKAGES:= $(call opkg_package_files,$(PACKAGES))
++endif
++
+ PACKAGE_INSTALL_FILES:= \
+ 	$(foreach pkg,$(sort $(package-y)), \
+ 		$(foreach variant, \
+@@ -68,6 +72,7 @@ $(curdir)/install: $(TMP_DIR)/.build $(c
+ 			$(call opkg,$(TARGET_DIR)) flag $$flag `cat $$file`; \
+ 		done; \
+ 	done || true
++	$(if $(CUSTOM_PACKAGES),$(CUSTOM_OPKG) install $(CUSTOM_PACKAGES))
+ 	@-$(MAKE) package/preconfig
+ 
+ 	$(CP) $(TARGET_DIR) $(TARGET_DIR_ORIG)
+@@ -80,7 +85,7 @@ $(curdir)/index: FORCE
+ 		mkdir -p $$d; \
+ 		cd $$d || continue; \
+ 		$(SCRIPT_DIR)/ipkg-make-index.sh . 2>&1 > Packages.manifest; \
+-		grep -vE '^(Maintainer|LicenseFiles|Source|Require)' Packages.manifest > Packages && \
++		grep -avE '^(Maintainer|LicenseFiles|Source|Require)' Packages.manifest > Packages && \
+ 			gzip -9nc Packages > Packages.gz; \
+ 	); done
+ ifdef CONFIG_SIGNED_PACKAGES

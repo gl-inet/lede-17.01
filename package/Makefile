@@ -31,6 +31,10 @@ ifneq ($(IGNORE_ERRORS),)
   $(curdir)/builddirs-ignore-host-compile := $(package-ignore-subdirs)
 endif
 
+ifneq ($(PACKAGES),)
+CUSTOM_PACKAGES:= $(call opkg_package_files,$(PACKAGES))
+endif
+
 PACKAGE_INSTALL_FILES:= \
 	$(foreach pkg,$(sort $(package-y)), \
 		$(foreach variant, \
@@ -68,6 +72,7 @@ $(curdir)/install: $(TMP_DIR)/.build $(curdir)/system/opkg/host/compile $(curdir
 			$(call opkg,$(TARGET_DIR)) flag $$flag `cat $$file`; \
 		done; \
 	done || true
+	$(if $(CUSTOM_PACKAGES),$(CUSTOM_OPKG) install $(CUSTOM_PACKAGES))
 	@-$(MAKE) package/preconfig
 
 	$(CP) $(TARGET_DIR) $(TARGET_DIR_ORIG)
@@ -80,7 +85,7 @@ $(curdir)/index: FORCE
 		mkdir -p $$d; \
 		cd $$d || continue; \
 		$(SCRIPT_DIR)/ipkg-make-index.sh . 2>&1 > Packages.manifest; \
-		grep -vE '^(Maintainer|LicenseFiles|Source|Require)' Packages.manifest > Packages && \
+		grep -avE '^(Maintainer|LicenseFiles|Source|Require)' Packages.manifest > Packages && \
 			gzip -9nc Packages > Packages.gz; \
 	); done
 ifdef CONFIG_SIGNED_PACKAGES
