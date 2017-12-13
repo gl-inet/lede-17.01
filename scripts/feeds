@@ -467,6 +467,7 @@ sub install_package {
 	my $feed = shift;
 	my $name = shift;
 	my $force = shift;
+	my $fforce = shift;
 	my $ret = 0;
 
 	my $this_feed_target = lookup_target($feed, $name);
@@ -515,6 +516,12 @@ sub install_package {
 	$installed{$name} and !$override and return 0;
 	$installed{$src} = 1;
 
+	# we'll trigger the override the package previously installed is from feeds
+	if ($fforce) {
+		system("rm -f ./package/feeds/*/$src 2>/dev/null");
+		# warn "Pacakge $name no installed\n" unless system("rm -f ./package/feeds/*/$name");
+	}
+
 	defined($override) and $override == 1
 		and warn "Overriding core package '$src' with version from $feed->[1]\n"
 		or warn "Installing package '$src' from $feed->[1]\n";
@@ -532,7 +539,7 @@ sub install_package {
 			$dep =~ s/^.+://;
 			$dep =~ s/\/.+$//;
 			next unless $dep;
-			install_package($feed, $dep, 0) == 0 or $ret = 1;
+			install_package($feed, $dep, 0, 0) == 0 or $ret = 1;
 		}
 	}
 
@@ -564,7 +571,7 @@ sub install {
 	my $feed;
 	my $ret = 0;
 
-	getopts('ap:d:fh', \%opts);
+	getopts('ap:d:foh', \%opts);
 
 	if ($opts{h}) {
 		usage();
@@ -590,7 +597,7 @@ sub install {
 					my $p = $feed_package->{$name};
 					next if $p->{vdepends};
 					if( $p->{name} ) {
-						install_package($feed, $p->{name}, exists($opts{f})) == 0 or $ret = 1;
+						install_package($feed, $p->{name}, exists($opts{f}), exists($opts{o})) == 0 or $ret = 1;
 						get_feed($f->[1]);
 					}
 				}
@@ -598,7 +605,7 @@ sub install {
 		}
 	} else {
 		while ($name = shift @ARGV) {
-			install_package($feed, $name, exists($opts{f})) == 0 or $ret = 1;
+			install_package($feed, $name, exists($opts{f}), exists($opts{o})) == 0 or $ret = 1;
 		}
 	}
 
@@ -799,6 +806,7 @@ Commands:
 	    -p <feedname>: Prefer this feed when installing packages.
 	    -d <y|m|n>:    Set default for newly installed packages.
 	    -f :           Install will be forced even if the package exists in core OpenWrt (override)
+	    -o :           Install will be forced even if the package exists in feeds, it must bound with -f(override)
 
 	search [options] <substring>: Search for a package
 	Options:
