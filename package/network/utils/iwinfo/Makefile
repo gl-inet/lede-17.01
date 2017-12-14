@@ -19,11 +19,16 @@ PKG_LICENSE:=GPL-2.0
 
 PKG_FLAGS := nonshared
 
-PKG_CONFIG_DEPENDS := \
-	CONFIG_PACKAGE_kmod-brcm-wl \
-	CONFIG_PACKAGE_kmod-brcm-wl-mini \
-	CONFIG_PACKAGE_kmod-brcm-wl-mimo \
-	CONFIG_PACKAGE_kmod-cfg80211
+ifeq ($(CONFIG_PACKAGE_kmod-mt7628),y)
+IWINFO_BACKENDS := \
+	$(if $(CONFIG_TARGET_ramips),rt)
+else
+IWINFO_BACKENDS := \
+	$(if $(CONFIG_PACKAGE_kmod-brcm-wl),wl) \
+	$(if $(CONFIG_PACKAGE_kmod-brcm-wl-mini),wl) \
+	$(if $(CONFIG_PACKAGE_kmod-brcm-wl-mimo),wl) \
+	$(if $(CONFIG_PACKAGE_kmod-cfg80211),nl80211)
+endif
 
 include $(INCLUDE_DIR)/package.mk
 
