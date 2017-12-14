@@ -288,6 +288,7 @@ zyx_nbg6716_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(env)ro,64k(RFdata)ro,-(
 yun_mtdlayout_8M=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,6464k(rootfs),1280k(kernel),64k(nvram),64k(art)ro,7744k@0x50000(firmware)
 yun_mtdlayout_16M=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,14656k(rootfs),1280k(kernel),64k(nvram),64k(art)ro,15936k@0x50000(firmware)
 wrtnode2q_mtdlayout=mtdparts=spi0.0:192k(u-boot)ro,64k(u-boot-env),64k(art)ro,1472k(kernel),14592k(rootfs),16064k@0x50000(firmware),16384k@0x0(fullflash)
+gl-ar300md_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,16000k(reserved),64k(art)ro;spi0.1:2048k(kernel),-(ubi)
 
 define Image/BuildKernel
 	cp $(KDIR)/vmlinux.elf $(VMLINUX).elf
@@ -761,6 +762,34 @@ define Image/Build/NetgearNAND
 	$(call Image/Build/SysupgradeNAND,$(2),squashfs,$(KDIR_TMP)/vmlinux-$(2).uImage)
 endef
 
+Image/Build/GLNAND/initramfs=$(call MkuImageLzma/initramfs,$(2),$(3) $(4))
+
+Image/Build/GLNAND/buildkernel=$(call MkuImageLzma,$(2),$(3) $(4))
+
+ #$(1): rootfs image suffix
+ #$(2): Board name (small caps)
+ #$(3): Kernel board specific cmdline
+ #$(4): Kernel mtdparts definition
+ #$(5): suffix of the configuration file for ubinize
+define Image/Build/GLNAND
+	$(eval kernelsize=$(call mtdpartsize,kernel,$(4)))
+	$(CP) $(KDIR)/root.squashfs-raw $(KDIR_TMP)/root.squashfs
+	echo -ne '\xde\xad\xc0\xde' > $(KDIR_TMP)/jffs2.eof
+	$(call ubinize,ubinize-$(5).ini,$(KDIR_TMP),$(KDIR_TMP)/$(2)-root.ubi,128KiB,2048,)
+
+	( \
+		dd if=$(KDIR_TMP)/vmlinux-$(2).uImage \
+			of=$(call imgname,kernel,$(2)).bin conv=sync; \
+		dd if=$(KDIR_TMP)/$(2)-root.ubi \
+			of=$(call imgname,$(1),$(2)-rootfs).ubi bs=128k conv=sync; \
+	)
+	( \
+		dd if=$(call imgname,kernel,$(2)).bin bs=$(kernelsize) conv=sync; \
+		dd if=$(call imgname,$(1),$(2)-rootfs).ubi \
+	) > $(call imgname,ubi-factory,$(2)).img
+
+	$(call Image/Build/SysupgradeNAND,$(2),squashfs,$(KDIR_TMP)/vmlinux-$(2).uImage)
+endef
 
 ifdef CONFIG_PACKAGE_uboot-ar71xx-nbg460n_550n_550nh
   Image/Build/ZyXEL/buildkernel=$(call MkuImageLzma,$(2),$(3))
@@ -1023,6 +1052,8 @@ $(eval $(call SingleProfile,Zcomax,64k,ZCN1523H28,zcn-1523h-2-8,ZCN-1523H-2,ttyS
 $(eval $(call SingleProfile,Zcomax,64k,ZCN1523H516,zcn-1523h-5-16,ZCN-1523H-5,ttyS0,115200,$$(zcn1523h_mtdlayout)))
 
 $(eval $(call SingleProfile,ZyXEL,64k,NBG_460N_550N_550NH,nbg460n_550n_550nh,NBG460N,ttyS0,115200,NBG-460N))
+
+$(eval $(call SingleProfile,GLNAND,64k,GL-AR300MD,gl-ar300m,GL-AR300M,ttyS0,115200,$$(gl-ar300md_mtdlayout),gl-ar300m))
 
 endif # ifeq ($(SUBTARGET),generic)
 

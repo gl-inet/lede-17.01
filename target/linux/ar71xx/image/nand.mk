@@ -92,3 +92,9 @@ define LegacyDevice/NBG6716
   DEVICE_PACKAGES := kmod-rtc-pcf8563 kmod-ath10k ath10k-firmware-qca988x
 endef
 LEGACY_DEVICES += NBG6716
+
+define LegacyDevice/GL-AR300MD
+	DEVICE_TITLE := GL-AR300M with nand flash
+	DEVICE_PACKAGES := kmod-usb-core kmod-usb2 uboot-envtools
+endef
+LEGACY_DEVICES += GL-AR300MD

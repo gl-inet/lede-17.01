@@ -1,0 +1,85 @@
+--- a/drivers/mtd/nand/ath79_spinand.c
++++ b/drivers/mtd/nand/ath79_spinand.c
+@@ -441,6 +441,9 @@ static int ath79_spinand_read_from_cache
+ 
+ 	cmd.cmd = ATH79_SPINAND_CMD_READ_RDM;
+ 	cmd.n_addr = 3;
++	cmd.addr[0] = 0;
++	cmd.addr[1] = (u8)(offset >> 8);
++	cmd.addr[2] = (u8)(offset >> 0);
+ 	cmd.n_dummy = 0;
+ 	cmd.n_rx = len;
+ 	cmd.rx_buf = rbuf;
+@@ -776,9 +779,9 @@ static void ath79_spinand_cmdfunc(struct
+ 					state->buf);
+ 		break;
+ 	case NAND_CMD_READOOB:
+-		state->buf_ptr = 0;
+-		ath79_spinand_read_page(info->spi, page, mtd->writesize,
+-					mtd->oobsize, state->buf);
++		state->buf_ptr = mtd->writesize;
++		ath79_spinand_read_page(info->spi, page, 0x0,
++					mtd->writesize + mtd->oobsize, state->buf);
+ 		break;
+ 	case NAND_CMD_RNDOUT:
+ 		state->buf_ptr = column;
+@@ -1005,6 +1008,21 @@ static struct ath79_spinand_priv ath79_s
+ 		0x07,					/* ecc error code */
+ 		SZ_512,					/* ecc size */
+ 		16,					/* ecc bytes */
++		1,					/* ecc strength */
++		&ath79_spinand_oob_128_gd,		/* ecc layout */
++		&ath79_badblock_pattern_default, 	/* bad block pattern */
++		ath79_spinand_eccsr_gd,			/* get ecc status */
++		ath79_spinand_read_rdm_addr_gd,		/* wrap address for 03h command */
++		ath79_spinand_program_load_gd,		/* program load data to cache */
++		ath79_spinand_erase_block_erase_common,	/* erase block */
++		ath79_spinand_page_read_to_cache_common,/* page read to cache */
++		ath79_spinand_program_execute_common,	/* program execute */
++	},
++	{ /* FW PN Device */
++		NAND_MFR_FWDEVICE,			/* manufacturer */
++		0x07,					/* ecc error code */
++		SZ_512,					/* ecc size */
++		16,					/* ecc bytes */
+ 		1,					/* ecc strength */
+ 		&ath79_spinand_oob_128_gd,		/* ecc layout */
+ 		&ath79_badblock_pattern_default, 	/* bad block pattern */
+--- a/drivers/mtd/nand/nand_ids.c
++++ b/drivers/mtd/nand/nand_ids.c
+@@ -55,6 +55,9 @@ struct nand_flash_dev nand_flash_ids[] =
+ 	{"GD5F1GQ4U 1G 3.3V 8-bit",
+ 		{ .id = {0xc8, 0xb1} },
+ 		  SZ_2K, SZ_128, SZ_128K, 0, 2, 128, NAND_ECC_INFO(4, SZ_512) },
++	{"PN256GO1  1G 3.3V 8-bit",
++		{ .id = {0xa1, 0xe1} },
++		  SZ_2K, SZ_128, SZ_128K, 0, 2, 128, NAND_ECC_INFO(4, SZ_512) },
+ 	{"GD5F2GQ4U 2G 3.3V 8-bit",
+ 		{ .id = {0xc8, 0xb2} },
+ 		  SZ_2K, SZ_256, SZ_128K, 0, 2, 128, NAND_ECC_INFO(4, SZ_512) },
+@@ -128,6 +131,7 @@ struct nand_flash_dev nand_flash_ids[] =
+ 	EXTENDED_ID_NAND("NAND 128MiB 3,3V 8-bit",  0xF1, 128, LP_OPTIONS),
+ 	EXTENDED_ID_NAND("NAND 128MiB 3,3V 8-bit",  0xD1, 128, LP_OPTIONS),
+ 	EXTENDED_ID_NAND("NAND 128MiB 1,8V 16-bit", 0xB1, 128, LP_OPTIONS16),
++	EXTENDED_ID_NAND("NAND 128MiB 3,3V 16-bit", 0xE1, 128, LP_OPTIONS16),
+ 	EXTENDED_ID_NAND("NAND 128MiB 3,3V 16-bit", 0xC1, 128, LP_OPTIONS16),
+ 	EXTENDED_ID_NAND("NAND 128MiB 1,8V 16-bit", 0xAD, 128, LP_OPTIONS16),
+ 
+@@ -207,6 +211,7 @@ struct nand_manufacturers nand_manuf_ids
+ 	{NAND_MFR_GIGADEVICE, "Giga Device"},
+ 	{NAND_MFR_WINBOND, "Winbond"},
+ 	{NAND_MFR_HEYANGTEK, "HeYang Tek"},
++	{NAND_MFR_FWDEVICE, "FW Device"},
+ 	{0x0, "Unknown"}
+ };
+ 
+--- a/include/linux/mtd/nand.h
++++ b/include/linux/mtd/nand.h
+@@ -735,6 +735,7 @@ struct nand_chip {
+ #define NAND_MFR_GIGADEVICE	0xc8
+ #define NAND_MFR_WINBOND	0xef
+ #define NAND_MFR_HEYANGTEK	0xc9
++#define NAND_MFR_FWDEVICE	0xA1
+ #define NAND_MFR_EON		0x92
+ #define NAND_MFR_SANDISK	0x45
+ #define NAND_MFR_INTEL		0x89
