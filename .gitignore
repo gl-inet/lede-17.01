@@ -27,6 +27,6 @@ TAGS*~
 git-src
 firmware.yml
 scripts/gl_image
-/release
+/releases
 /package/gli-pri
 /.pc
