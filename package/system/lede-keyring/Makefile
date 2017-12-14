@@ -31,6 +31,7 @@ Build/Compile=
 
 define Package/lede-keyring/install
 	$(INSTALL_DIR) $(1)/etc/opkg/keys/
+	$(INSTALL_DATA) ./files/usign/* $(1)/etc/opkg/keys/
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/usign/* $(1)/etc/opkg/keys/
 endef
 
