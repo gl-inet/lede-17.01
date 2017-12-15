@@ -32,7 +32,10 @@ ifneq ($(IGNORE_ERRORS),)
 endif
 
 ifneq ($(PACKAGES),)
-CUSTOM_PACKAGES:= $(call opkg_package_files,$(PACKAGES))
+CUSTOM_PACKAGES:= \
+	$(if $(call opkg_package_files,$(PACKAGES)), \
+		$(wildcard \
+			$(foreach pkg,$(PACKAGES), $(PREBUILT_DIR)/$(pkg)_*.ipk)))
 endif
 
 PACKAGE_INSTALL_FILES:= \
