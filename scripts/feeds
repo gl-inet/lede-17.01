@@ -467,7 +467,7 @@ sub install_package {
 	my $feed = shift;
 	my $name = shift;
 	my $force = shift;
-	my $fforce = shift;
+	my $remove = shift;
 	my $ret = 0;
 
 	my $this_feed_target = lookup_target($feed, $name);
@@ -513,11 +513,11 @@ sub install_package {
 	my $override = 1 if ($force and is_core_package($src) and !$installed{$name}->{feed});
 
 	# check previously installed packages
-	$installed{$name} and !$override and return 0;
+	$installed{$name} and !$override and !$remove and return 0;
 	$installed{$src} = 1;
 
 	# we'll trigger the override the package previously installed is from feeds
-	if ($fforce) {
+	if ($remove) {
 		system("rm -f ./package/feeds/*/$src 2>/dev/null");
 		# warn "Pacakge $name no installed\n" unless system("rm -f ./package/feeds/*/$name");
 	}
