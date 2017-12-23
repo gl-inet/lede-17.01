@@ -73,7 +73,10 @@ $(curdir)/install: $(TMP_DIR)/.build $(curdir)/system/opkg/host/compile $(curdir
 		done; \
 	done || true
 	$(if $(CUSTOM_PACKAGES),$(CUSTOM_OPKG) install $(CUSTOM_PACKAGES))
-	$(if $(PACKAGES_REMOVE), $(CUSTOM_OPKG) --autoremove remove $(PACKAGES_REMOVE))
+	$(if $(PACKAGES_REMOVE), $(CUSTOM_OPKG) \
+		--force-depends \
+		--force-removal-of-dependent-packages \
+		--autoremove remove $(PACKAGES_REMOVE))
 	@-$(MAKE) package/preconfig
 
 	$(CP) $(TARGET_DIR) $(TARGET_DIR_ORIG)
