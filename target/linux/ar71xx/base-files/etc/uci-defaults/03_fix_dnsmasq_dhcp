@@ -11,6 +11,9 @@ config_dnsmasq_dhcp()
 		uci commit dhcp
 		uci set wireless.radio0.doth=0
 		uci commit wireless
+		[ -e "/usr/bin/get_country" ] && {
+			/usr/bin/get_country
+		}
 }
 
 
