@@ -1053,8 +1053,6 @@ $(eval $(call SingleProfile,Zcomax,64k,ZCN1523H516,zcn-1523h-5-16,ZCN-1523H-5,tt
 
 $(eval $(call SingleProfile,ZyXEL,64k,NBG_460N_550N_550NH,nbg460n_550n_550nh,NBG460N,ttyS0,115200,NBG-460N))
 
-$(eval $(call SingleProfile,GLNAND,64k,GL-AR300MD,gl-ar300m,GL-AR300M,ttyS0,115200,$$(gl-ar300md_mtdlayout),gl-ar300m))
-
 endif # ifeq ($(SUBTARGET),generic)
 
 ifeq ($(SUBTARGET),nand)
@@ -1064,6 +1062,8 @@ $(eval $(call SingleProfile,NetgearNAND,64k,WNDR4300V1,wndr4300,WNDR4300,ttyS0,1
 $(eval $(call SingleProfile,NetgearNAND,64k,R6100,r6100,R6100,ttyS0,115200,$$(r6100_mtdlayout),0x36303030,R6100,"",-H 29764434+0+128+128+2x2+2x2,wndr4300))
 
 $(eval $(call SingleProfile,ZyXELNAND,128k,NBG6716,nbg6716,NBG6716,ttyS0,115200,NBG6716,$$(zyx_nbg6716_mtdlayout),mem=256M))
+
+$(eval $(call SingleProfile,GLNAND,64k,GL-AR300MD,gl-ar300m,GL-AR300M,ttyS0,115200,$$(gl-ar300md_mtdlayout),gl-ar300m))
 
 endif # ifeq ($(SUBTARGET),nand)
 
