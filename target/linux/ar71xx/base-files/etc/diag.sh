@@ -187,9 +187,6 @@ get_status_led() {
 	esr1750)
 		status_led="$board:amber:power"
 		;;
-    gl-ar750)
-        status_led="$board:white:power"
-		;;
 	esr900)
 		status_led="engenius:amber:power"
 		;;
