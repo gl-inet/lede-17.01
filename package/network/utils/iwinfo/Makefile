@@ -21,17 +21,6 @@ PKG_LICENSE:=GPL-2.0
 
 PKG_FLAGS := nonshared
 
-ifeq ($(CONFIG_PACKAGE_kmod-mt7628),y)
-IWINFO_BACKENDS := \
-	$(if $(CONFIG_TARGET_ramips),rt)
-else
-IWINFO_BACKENDS := \
-	$(if $(CONFIG_PACKAGE_kmod-brcm-wl),wl) \
-	$(if $(CONFIG_PACKAGE_kmod-brcm-wl-mini),wl) \
-	$(if $(CONFIG_PACKAGE_kmod-brcm-wl-mimo),wl) \
-	$(if $(CONFIG_PACKAGE_kmod-cfg80211),nl80211)
-endif
-
 include $(INCLUDE_DIR)/package.mk
 
 
@@ -78,11 +67,16 @@ endef
 define Build/Configure
 endef
 
+ifeq ($(CONFIG_PACKAGE_kmod-mt7628),y)
+IWINFO_BACKENDS := \
+	$(if $(CONFIG_TARGET_ramips),rt)
+else
 IWINFO_BACKENDS := \
 	$(if $(CONFIG_PACKAGE_kmod-brcm-wl),wl) \
 	$(if $(CONFIG_PACKAGE_kmod-brcm-wl-mini),wl) \
 	$(if $(CONFIG_PACKAGE_kmod-brcm-wl-mimo),wl) \
 	$(if $(CONFIG_PACKAGE_kmod-cfg80211),nl80211)
+endif
 
 TARGET_CFLAGS += \
 	-I$(STAGING_DIR)/usr/include/libnl-tiny \
