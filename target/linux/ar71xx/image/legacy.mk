@@ -288,7 +288,7 @@ zyx_nbg6716_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(env)ro,64k(RFdata)ro,-(
 yun_mtdlayout_8M=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,6464k(rootfs),1280k(kernel),64k(nvram),64k(art)ro,7744k@0x50000(firmware)
 yun_mtdlayout_16M=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,14656k(rootfs),1280k(kernel),64k(nvram),64k(art)ro,15936k@0x50000(firmware)
 wrtnode2q_mtdlayout=mtdparts=spi0.0:192k(u-boot)ro,64k(u-boot-env),64k(art)ro,1472k(kernel),14592k(rootfs),16064k@0x50000(firmware),16384k@0x0(fullflash)
-gl-ar300md_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,16000k(reserved),64k(art)ro;spi0.1:2048k(kernel),-(ubi)
+gl-ar300md_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env),16000k(reserved),64k(art)ro;spi0.1:2048k(kernel),-(ubi)
 
 define Image/BuildKernel
 	cp $(KDIR)/vmlinux.elf $(VMLINUX).elf
