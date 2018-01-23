@@ -110,6 +110,7 @@ obj-$(CONFIG_ATH79_MACH_GL_AR150)		+= mach-gl-ar150.o
 obj-$(CONFIG_ATH79_MACH_GL_AR300)		+= mach-gl-ar300.o
 obj-$(CONFIG_ATH79_MACH_GL_AR300M)		+= mach-gl-ar300m.o
 obj-$(CONFIG_ATH79_MACH_GL_AR750)		+= mach-gl-ar750.o
+obj-$(CONFIG_ATH79_MACH_GL_AR1200)		+= mach-gl-ar1200.o
 obj-$(CONFIG_ATH79_MACH_GL_DOMINO)		+= mach-gl-domino.o
 obj-$(CONFIG_ATH79_MACH_GL_INET)		+= mach-gl-inet.o
 obj-$(CONFIG_ATH79_MACH_GL_MIFI)		+= mach-gl-mifi.o

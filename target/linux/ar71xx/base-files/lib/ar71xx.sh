@@ -629,9 +629,12 @@ ar71xx_board_detect() {
 	*"GL-AR300M")
 		name="gl-ar300m"
 		;;
-    *"GL-AR750")
-        name="gl-ar750"
-        ;;
+	*"GL-AR750")
+        	name="gl-ar750"
+      		;;
+	*"GL-AR1200")
+        	name="gl-ar1200"
+      		;;
 	*"GL-MIFI")
 		name="gl-mifi"
 		;;

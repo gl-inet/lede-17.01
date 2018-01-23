@@ -172,6 +172,17 @@ define Device/gl-ar750
 endef
 TARGET_DEVICES += gl-ar750
 
+define Device/gl-ar1200
+  DEVICE_TITLE := GL.iNet GL-AR1200
+  DEVICE_PACKAGES := kmod-ath10k ath10k-firmware-qca988x kmod-usb-core \
+       kmod-usb2 kmod-usb-storage
+  BOARDNAME = GL-AR1200
+  IMAGE_SIZE = 16000k
+  CONSOLE = ttyS0,115200
+  MTDPARTS = spi0.0:256k(u-boot)ro,64k(u-boot-env),64k(art)ro,16000k(firmware)
+endef
+TARGET_DEVICES += gl-ar1200
+
 define Device/gl-domino
   DEVICE_TITLE := GL Domino Pi
   DEVICE_PACKAGES := kmod-usb-core kmod-usb2
