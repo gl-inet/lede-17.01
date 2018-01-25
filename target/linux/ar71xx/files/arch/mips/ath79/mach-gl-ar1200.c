@@ -64,11 +64,11 @@ static struct gpio_led gl_ar1200_leds_gpio[] __initdata = {
     },{
 		.name		= "gl-ar1200:white:wlan2g",
 		.gpio		= GL_AR1200_GPIO_LED_WLAN2G,
-		.active_low	= 0,
+		.active_low	= 1,
 	},{
 		.name		= "gl-ar1200:white:wlan5g",
 		.gpio		= GL_AR1200_GPIO_LED_WLAN5G,
-		.active_low	= 1,
+		.active_low	= 0,
 	}
 };
 
@@ -119,7 +119,7 @@ static struct mdio_board_info gl_ar1200_mdio0_info[] = {
 
 static void __init  gl_ar1200_setup(void)
 {
-	u8 *eeprom = (u8 *) KSEG1ADDR(0x1f050000);
+	u8 *eeprom = (u8 *) KSEG1ADDR(0x1fff0000);
 
 	ath79_register_m25p80(&gl_ar1200_flash_data);
 
