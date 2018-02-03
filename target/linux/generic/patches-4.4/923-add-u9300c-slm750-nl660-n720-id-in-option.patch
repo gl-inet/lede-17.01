@@ -1,0 +1,37 @@
+--- a/drivers/usb/serial/option.c
++++ b/drivers/usb/serial/option.c
+@@ -366,6 +366,23 @@ static void option_instat_callback(struc
+ /* Zoom */
+ #define ZOOM_PRODUCT_4597			0x9607
+ 
++#define LONGSUNG_PRODUCT_U9300C                 0x9b3c
++
++/* FORGE PRODUCT */
++#define FORGE_VENDOR_ID                         0x05c6
++
++#define FORGE_PRODUCT_SLM750                    0xf601
++
++/* NODECOM PRODUCT */
++#define NODECOM_VENDOR_ID                       0x1508
++
++#define NODECOM_PRODUCT_NL660                   0x1001
++
++/* NEOWAY PRODUCT */
++#define NEOWAY_VENDOR_ID                        0x2949
++
++#define NEOWAY_PRODUCT_N720                     0x8243
++
+ /* SpeedUp SU9800 usb 3g modem */
+ #define SPEEDUP_PRODUCT_SU9800			0x9800
+ 
+@@ -1681,6 +1698,10 @@ static const struct usb_device_id option
+ 	{ USB_DEVICE_INTERFACE_CLASS(LONGCHEER_VENDOR_ID, SPEEDUP_PRODUCT_SU9800, 0xff) },
+ 	{ USB_DEVICE(LONGCHEER_VENDOR_ID, ZOOM_PRODUCT_4597) },
+ 	{ USB_DEVICE(LONGCHEER_VENDOR_ID, IBALL_3_5G_CONNECT) },
++	{ USB_DEVICE(LONGCHEER_VENDOR_ID, LONGSUNG_PRODUCT_U9300C) },
++	{ USB_DEVICE(FORGE_VENDOR_ID, FORGE_PRODUCT_SLM750) },
++	{ USB_DEVICE(NODECOM_VENDOR_ID, NODECOM_PRODUCT_NL660) },
++	{ USB_DEVICE(NEOWAY_VENDOR_ID, NEOWAY_PRODUCT_N720) },
+ 	{ USB_DEVICE(HAIER_VENDOR_ID, HAIER_PRODUCT_CE100) },
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(HAIER_VENDOR_ID, HAIER_PRODUCT_CE81B, 0xff, 0xff, 0xff) },
+ 	/* Pirelli  */
