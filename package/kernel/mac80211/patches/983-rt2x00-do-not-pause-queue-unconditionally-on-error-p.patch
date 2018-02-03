@@ -1,0 +1,57 @@
+From 52d72fa9666364101d70b27ef233eac6533a126c Mon Sep 17 00:00:00 2001
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+Date: Tue, 19 Dec 2017 12:33:56 +0100
+Subject: [PATCH 2/2] rt2x00: do not pause queue unconditionally on error path
+
+Pausing queue without checking threshold is racy with txdone path.
+Moreover we do not need pause queue on any error, but only if queue
+is full - in case when we send RTS frame ( other cases of almost full
+queue are already handled in rt2x00queue_write_tx_frame() ).
+
+Patch fixes of theoretically possible problem of pausing empty
+queue.
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2x00mac.c | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
+
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+@@ -142,22 +142,28 @@ void rt2x00mac_tx(struct ieee80211_hw *h
+ 	if (!rt2x00dev->ops->hw->set_rts_threshold &&
+ 	    (tx_info->control.rates[0].flags & (IEEE80211_TX_RC_USE_RTS_CTS |
+ 						IEEE80211_TX_RC_USE_CTS_PROTECT))) {
+-		if (rt2x00queue_available(queue) <= 1)
+-			goto exit_fail;
++		if (rt2x00queue_available(queue) <= 1) {
++			/*
++			 * Recheck for full queue under lock to avoid race
++			 * conditions with rt2x00lib_txdone().
++			 */
++			spin_lock(&queue->tx_lock);
++			if (rt2x00queue_threshold(queue))
++				rt2x00queue_pause_queue(queue);
++			spin_unlock(&queue->tx_lock);
++
++			goto exit_free_skb;
++		}
+ 
+ 		if (rt2x00mac_tx_rts_cts(rt2x00dev, queue, skb))
+-			goto exit_fail;
++			goto exit_free_skb;
+ 	}
+ 
+ 	if (unlikely(rt2x00queue_write_tx_frame(queue, skb, control->sta, false)))
+-		goto exit_fail;
++		goto exit_free_skb;
+ 
+ 	return;
+ 
+- exit_fail:
+-	spin_lock(&queue->tx_lock);
+-	rt2x00queue_pause_queue(queue);
+-	spin_unlock(&queue->tx_lock);
+  exit_free_skb:
+ 	ieee80211_free_txskb(hw, skb);
+ }

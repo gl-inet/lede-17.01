@@ -1,0 +1,53 @@
+From 6ba598321e8f2b66444547a52eb422a90ff84090 Mon Sep 17 00:00:00 2001
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+Date: Tue, 19 Dec 2017 12:33:55 +0100
+Subject: [PATCH 1/2] rt2x00: pause almost full queue early
+
+Do not drop &queue->tx_lock and acquire it again to pause queue when
+available entries are below the threshold.
+
+Patch should mitigate problem of frequently printed errors:
+"Error - Dropping frame due to full tx queue"
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2x00mac.c   | 10 ----------
+ drivers/net/wireless/ralink/rt2x00/rt2x00queue.c |  8 ++++++++
+ 2 files changed, 8 insertions(+), 10 deletions(-)
+
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+@@ -152,16 +152,6 @@ void rt2x00mac_tx(struct ieee80211_hw *h
+ 	if (unlikely(rt2x00queue_write_tx_frame(queue, skb, control->sta, false)))
+ 		goto exit_fail;
+ 
+-	/*
+-	 * Pausing queue has to be serialized with rt2x00lib_txdone(). Note
+-	 * we should not use spin_lock_bh variant as bottom halve was already
+-	 * disabled before ieee80211_xmit() call.
+-	 */
+-	spin_lock(&queue->tx_lock);
+-	if (rt2x00queue_threshold(queue))
+-		rt2x00queue_pause_queue(queue);
+-	spin_unlock(&queue->tx_lock);
+-
+ 	return;
+ 
+  exit_fail:
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+@@ -715,6 +715,14 @@ int rt2x00queue_write_tx_frame(struct da
+ 	rt2x00queue_kick_tx_queue(queue, &txdesc);
+ 
+ out:
++	/*
++	 * Pausing queue has to be serialized with rt2x00lib_txdone(), so we
++	 * do this under queue->tx_lock. Bottom halve was already disabled
++	 * before ieee80211_xmit() call.
++	 */
++	if (rt2x00queue_threshold(queue))
++		rt2x00queue_pause_queue(queue);
++
+ 	spin_unlock(&queue->tx_lock);
+ 	return ret;
+ }
