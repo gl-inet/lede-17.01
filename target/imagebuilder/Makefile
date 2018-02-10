@@ -31,6 +31,7 @@ $(BIN_DIR)/$(IB_NAME).tar.xz: clean
 		$(INCLUDE_DIR) $(SCRIPT_DIR) \
 		$(TOPDIR)/rules.mk \
 		./files/Makefile \
+		./files/gl_image \
 		./files/repositories.conf \
 		$(TMP_DIR)/.targetinfo \
 		$(TMP_DIR)/.packageinfo \

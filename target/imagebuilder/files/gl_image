@@ -1,0 +1,90 @@
+#!/usr/bin/env python
+
+import sys
+import json
+import getopt
+import logging
+from subprocess import check_call
+
+def usage(pname):
+    print "GL.iNet create released image utility"
+    print "Usage: " + pname + " <OPTIONS>"
+    print ""
+    print " -i|--image          Which type image to create"
+    print " -p|--profile        Create image for which profile"
+    print " -v|--version        Released version number"
+    print " -f|--files          Files directory"
+    
+def main(argv):
+    logging.basicConfig(format = '%(levelname)s: %(message)s')
+    pname = argv[0]
+
+    try:
+        (opts, args) = getopt.getopt(argv[1:], 
+                "hp:v:i:f:", 
+                [ "help", "profile=", "version=", "image=", "files=" ])
+    except getopt.GetoptError as e:
+	usage(pname)
+	return 1
+
+    image= None
+    profile = None
+    version = None
+    files = ""
+
+    for (o, v) in opts:
+        if o in ("-h", "--help"):
+            usage(pname)
+            return 0
+        if o in ("-i", "--image"):
+            image = v
+        if o in ("-p", "--profile"):
+            profile = v
+        if o in ("-v", "--version"):
+            version = v
+        if o in ("-f", "--files"):
+            files = v
+
+    if image is None or profile is None or version is None:
+        logging.error("No (image|profile|version) specified, try run with -h")
+        return 1
+
+    filename = "images.json"
+
+    try:
+        with open(filename) as fd:
+            data = json.load(fd)
+            fd.close()
+    except:
+        logging.error("Failed to parse jsonfile[%s]" % filename)
+        return 1
+
+    images = data['images']
+    profiles = data['profiles']
+
+    if not image in images.keys():
+        logging.error("Specified image[%s] is not in jsonfile[%s]" % (image, filename))
+        return 1
+    if not profile in profiles.keys():
+        logging.error("Specified profile[%s] is not in jsonfile[%s]" % (profile, filename))
+        return 1
+
+    include_ipk = ""
+    exclude_ipk = ""
+
+    for (k, v) in images.items():
+        if image == k:
+            include_ipk = v
+
+    for (k, v) in profiles.items():
+        if profile == k:
+            i_ipk = v["include"]
+            e_ipk = v["exclude"]
+            include_ipk = include_ipk + " " + i_ipk
+            exclude_ipk = exclude_ipk + " " + e_ipk
+
+    check_call("make image PROFILE=%s VERSION=%s PACKAGES=\"%s\" REMOVE_PACKAGES=\"%s\" FILES=%s" % \
+            (profile, version, include_ipk, exclude_ipk, files), shell=True);
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

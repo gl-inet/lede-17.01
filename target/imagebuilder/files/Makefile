@@ -101,7 +101,7 @@ _call_info: FORCE
 	echo 'Available Profiles:'
 	echo; $(PROFILE_LIST)
 
-BUILD_PACKAGES:=$(USER_PACKAGES) $(sort $(DEFAULT_PACKAGES) $($(USER_PROFILE)_PACKAGES) kernel)
+BUILD_PACKAGES:=$(sort $(DEFAULT_PACKAGES) $($(USER_PROFILE)_PACKAGES) kernel) $(USER_PACKAGES)
 # "-pkgname" in the package list means remove "pkgname" from the package list
 BUILD_PACKAGES:=$(filter-out $(filter -%,$(BUILD_PACKAGES)) $(patsubst -%,%,$(filter -%,$(BUILD_PACKAGES))),$(BUILD_PACKAGES))
 PACKAGES:=
@@ -112,7 +112,7 @@ _call_image: staging_dir/host/.prereq-build
 	echo
 	rm -rf $(TARGET_DIR)
 	mkdir -p $(TARGET_DIR) $(BIN_DIR) $(TMP_DIR) $(DL_DIR)
-	if [ ! -f "$(PACKAGE_DIR)/Packages" ] || [ ! -f "$(PACKAGE_DIR)/Packages.gz" ] || [ "`find $(PACKAGE_DIR) -cnewer $(PACKAGE_DIR)/Packages.gz`" ]; then \
+	if [ ! -f "$(PACKAGE_DIR)/Packages" ] || [ ! -f "$(PACKAGE_DIR)/Packages.gz" ] || [ "`find $(PACKAGE_DIR) -cnewer $(PACKAGE_DIR)/Packages.gz -not -name "*.sig"`" ]; then \
 		echo "Package list missing or not up-to-date, generating it.";\
 		$(MAKE) package_index; \
 	else \
@@ -120,6 +120,12 @@ _call_image: staging_dir/host/.prereq-build
 		$(OPKG) update || true; \
 	fi
 	$(MAKE) package_install
+ifneq ($(REMOVE_PACKAGES),)
+	$(MAKE) package_remove
+endif
+ifneq ($(VERSION),)
+	$(MAKE) prepare_files
+endif
 ifneq ($(USER_FILES),)
 	$(MAKE) copy_files
 endif
@@ -134,6 +140,12 @@ package_index: FORCE
 	(cd $(PACKAGE_DIR); $(SCRIPT_DIR)/ipkg-make-index.sh . > Packages && \
 		gzip -9nc Packages > Packages.gz \
 	) >/dev/null 2>/dev/null
+ifdef CONFIG_SIGNED_PACKAGES
+	@echo Signing package index...
+	(cd $(PACKAGE_DIR) || continue; \
+		$(STAGING_DIR_HOST)/bin/usign -S -m Packages -s $(BUILD_KEY); \
+	) >/dev/null 2>/dev/null
+endif
 	$(OPKG) update || true
 
 package_install: FORCE
@@ -143,6 +155,18 @@ package_install: FORCE
 	$(OPKG) install $(firstword $(wildcard $(PACKAGE_DIR)/kernel_*.ipk $(PACKAGE_DIR)/base/kernel_*.ipk))
 	$(OPKG) install $(BUILD_PACKAGES)
 	rm -f $(TARGET_DIR)/usr/lib/opkg/lists/*
+
+package_remove: FORCE
+	@echo
+	@echo Removing packages...
+	$(OPKG) remove $(REMOVE_PACKAGES)
+	rm -f $(TARGET_DIR)/usr/lib/opkg/lists/*
+
+prepare_files: FORCE
+	mkdir -p $(TARGET_DIR)/etc
+	mkdir -p $(TARGET_DIR)/etc/opkg
+	@echo "$(VERSION)" > $(TARGET_DIR)/etc/glversion
+	@echo "src/gz packages http://www.gl-inet.com/lede/$(VERSION)/$(BOARD)/$(SUBTARGET)" > $(TARGET_DIR)/etc/opkg/distfeeds.conf
 
 copy_files: FORCE
 	@echo
@@ -204,7 +228,9 @@ endif
 	$(MAKE) _call_image \
 		$(if $(PROFILE),USER_PROFILE="$(PROFILE_FILTER)") \
 		$(if $(FILES),USER_FILES="$(FILES)") \
+		$(if $(VERSION),VERSION="$(VERSION)") \
 		$(if $(PACKAGES),USER_PACKAGES="$(PACKAGES)") \
+		$(if $(REMOVE_PACKAGES),REMOVE_PACKAGES="$(REMOVE_PACKAGES)") \
 		$(if $(BIN_DIR),BIN_DIR="$(BIN_DIR)"))
 
 .SILENT: help info image
