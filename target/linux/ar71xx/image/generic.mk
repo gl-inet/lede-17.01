@@ -172,6 +172,17 @@ define Device/gl-ar750
 endef
 TARGET_DEVICES += gl-ar750
 
+define Device/gl-ar750s
+  DEVICE_TITLE := GL.iNet GL-AR750S
+  DEVICE_PACKAGES := kmod-ath10k ath10k-firmware-qca9887 kmod-usb-core \
+       kmod-usb2 kmod-usb-storage
+  BOARDNAME = GL-AR750S
+  IMAGE_SIZE = 16000k
+  CONSOLE = ttyS0,115200
+  MTDPARTS = spi0.0:256k(u-boot)ro,64k(u-boot-env),16000k(firmware),64k(art)ro
+endef
+TARGET_DEVICES += gl-ar750s
+
 define Device/gl-ar1200
   DEVICE_TITLE := GL.iNet GL-AR1200
   DEVICE_PACKAGES := kmod-ath10k ath10k-firmware-qca9888 kmod-usb-core \

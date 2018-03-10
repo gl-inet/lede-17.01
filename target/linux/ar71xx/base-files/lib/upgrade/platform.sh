@@ -270,6 +270,7 @@ platform_check_image() {
 	ew-dorin|\
 	gl-ar150|\
 	gl-ar750|\
+	gl-ar750s|\
 	gl-ar1200|\
 	gl-ar300|\
 	gl-domino|\
