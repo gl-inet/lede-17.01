@@ -119,7 +119,7 @@ static struct mdio_board_info gl_ar750s_mdio0_info[] = {
 
 static void __init  gl_ar750s_setup(void)
 {
-	u8 *eeprom = (u8 *) KSEG1ADDR(0x1fff0000);
+	u8 *eeprom = (u8 *) KSEG1ADDR(0x1060000);
 
 	ath79_register_m25p80(&gl_ar750s_flash_data);
 
