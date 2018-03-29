@@ -31,6 +31,7 @@
 #include "dev-eth.h"
 #include "dev-gpio-buttons.h"
 #include "dev-leds-gpio.h"
+#include "dev-spi.h"
 #include "dev-m25p80.h"
 #include "dev-wmac.h"
 #include "dev-usb.h"
@@ -54,12 +55,30 @@
 #define GL_AR750S_PCI_CALDATA_OFFSET      0x5000
 
 #define GL_AR750S_GPIO_I2C_SDA	5
-#define GL_AR750S_GPIO_I2C_SCL	6
+#define GL_AR750S_GPIO_I2C_SCL	21
 
 
-static struct flash_platform_data gl_ar750s_flash_data = {
-	/* mx25l12805d and mx25l12835f have the same JEDEC ID */
-	.type = "mx25l12805d",
+
+static struct spi_board_info gl_ar750s_spi_info[] = {
+    {
+        .bus_num    = 0,
+        .chip_select    = 0,
+        .max_speed_hz   = 25000000,
+        .modalias   = "m25p80",
+        .platform_data  = NULL,
+    },
+    {
+        .bus_num    = 0,
+        .chip_select    = 1,
+        .max_speed_hz   = 25000000,
+        .modalias   = "generic-spinand-controller",
+        .platform_data  = NULL,
+    }
+};
+
+static struct ath79_spi_platform_data gl_ar750s_spi_data = {
+    .bus_num        = 0,
+    .num_chipselect     = 2,
 };
 
 static struct gpio_led gl_ar750s_leds_gpio[] __initdata = {
@@ -144,8 +163,7 @@ static void __init  gl_ar750s_setup(void)
 {
 	u8 *eeprom = (u8 *) KSEG1ADDR(0x1f050000);
 
-	ath79_register_m25p80(&gl_ar750s_flash_data);
-
+	ath79_register_spi(&gl_ar750s_spi_data, gl_ar750s_spi_info, 2);
 
 	ath79_init_mac(ath79_eth0_data.mac_addr,
 	               eeprom + GL_AR750S_MAC0_OFFSET, 0);

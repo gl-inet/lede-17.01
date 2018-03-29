@@ -189,6 +189,9 @@ gl_ar300m_is_nand() {
 	132120576)
 		return 0
 		;;
+	134217728)
+		return 0
+		;;
 	*)
 		return 1
 		;;
@@ -270,7 +273,6 @@ platform_check_image() {
 	ew-dorin|\
 	gl-ar150|\
 	gl-ar750|\
-	gl-ar750s|\
 	gl-ar1200|\
 	gl-ar300|\
 	gl-domino|\
@@ -577,6 +579,7 @@ platform_check_image() {
 		cybertan_check_image "$1" && return 0
 		return 1
 		;;
+	gl-ar750s|\
 	gl-ar300m)
 		platform_check_image_gl_ar300m "$1" "$board" "$magic" && return 0
 		return 1
@@ -651,6 +654,7 @@ platform_pre_upgrade() {
 	local board=$(ar71xx_board_name)
 
 	case "$board" in
+	gl-ar750s|\
 	gl-ar300m)
 		platform_pre_upgrade_gl_ar300m "$1"
 		;;

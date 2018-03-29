@@ -98,3 +98,9 @@ define LegacyDevice/GL-AR300MD
 	DEVICE_PACKAGES := kmod-usb-core kmod-usb2 uboot-envtools
 endef
 LEGACY_DEVICES += GL-AR300MD
+
+define LegacyDevice/GL-AR750S
+	DEVICE_TITLE := GL-AR750S with nand flash
+	DEVICE_PACKAGES := kmod-usb-core kmod-usb2 uboot-envtools
+endef
+LEGACY_DEVICES += GL-AR750S
