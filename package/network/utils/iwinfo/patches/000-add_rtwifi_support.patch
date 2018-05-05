@@ -13,15 +13,6 @@
  	IWINFO_CFLAGS  += -DUSE_WL
 --- a/iwinfo_cli.c
 +++ b/iwinfo_cli.c
-@@ -36,7 +36,7 @@ static char * format_ssid(char *ssid)
- {
- 	static char buf[IWINFO_ESSID_MAX_SIZE+3];
- 
--	if (ssid && ssid[0])
-+	if (ssid && (ssid[0] != ' '))
- 		snprintf(buf, sizeof(buf), "\"%s\"", ssid);
- 	else
- 		snprintf(buf, sizeof(buf), "unknown");
 @@ -111,7 +111,11 @@ static char * format_signal(int sig)
  	if (!sig)
  		snprintf(buf, sizeof(buf), "unknown");

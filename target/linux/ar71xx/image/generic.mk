@@ -179,7 +179,7 @@ define Device/gl-ar750s
   BOARDNAME = GL-AR750S
   IMAGE_SIZE = 16000k
   CONSOLE = ttyS0,115200
-  MTDPARTS = spi0.0:256k(u-boot)ro,64k(u-boot-env),16000k(firmware),64k(art)ro
+  MTDPARTS = spi0.0:256k(u-boot)ro,64k(u-boot-env),64k(art)ro,16000k(firmware)
 endef
 TARGET_DEVICES += gl-ar750s
 

@@ -16,6 +16,9 @@
 #include <linux/ath9k_platform.h>
 #include <linux/etherdevice.h>
 
+#include <linux/i2c.h>
+#include <linux/i2c-gpio.h>
+
 #include <asm/mach-ath79/ath79.h>
 #include <asm/mach-ath79/irq.h>
 #include <asm/mach-ath79/ar71xx_regs.h>
@@ -28,6 +31,7 @@
 #include "dev-eth.h"
 #include "dev-gpio-buttons.h"
 #include "dev-leds-gpio.h"
+#include "dev-spi.h"
 #include "dev-m25p80.h"
 #include "dev-wmac.h"
 #include "dev-usb.h"
@@ -41,6 +45,7 @@
 #define GL_AR750S_GPIO_LED_WLAN2G       19
 #define GL_AR750S_GPIO_LED_WLAN5G       20
 #define GL_AR750S_GPIO_LED_POWER	1
+#define GL_AR750S_GPIO_USB_POWER	7
 
 #define GL_AR750S_GPIO_BTN_RESET	2
 #define GL_AR750S_GPIO_BTN_RIGHT	8
@@ -49,19 +54,44 @@
 #define GL_AR750S_WMAC_CALDATA_OFFSET     0x1000
 #define GL_AR750S_PCI_CALDATA_OFFSET      0x5000
 
+#define GL_AR750S_GPIO_I2C_SDA	5
+#define GL_AR750S_GPIO_I2C_SCL	21
 
-static struct flash_platform_data gl_ar750s_flash_data = {
-	/* mx25l12805d and mx25l12835f have the same JEDEC ID */
-	.type = "mx25l12805d",
+
+
+static struct spi_board_info gl_ar750s_spi_info[] = {
+    {
+        .bus_num    = 0,
+        .chip_select    = 0,
+        .max_speed_hz   = 25000000,
+        .modalias   = "m25p80",
+        .platform_data  = NULL,
+    },
+    {
+        .bus_num    = 0,
+        .chip_select    = 1,
+        .max_speed_hz   = 25000000,
+        .modalias   = "generic-spinand-controller",
+        .platform_data  = NULL,
+    }
+};
+
+static struct ath79_spi_platform_data gl_ar750s_spi_data = {
+    .bus_num        = 0,
+    .num_chipselect     = 2,
 };
 
 static struct gpio_led gl_ar750s_leds_gpio[] __initdata = {
 	{
-        .name           = "gl-ar750s:white:power",
-        .gpio           = GL_AR750S_GPIO_LED_POWER,
-        .default_state  = LEDS_GPIO_DEFSTATE_KEEP,
-        .active_low     = 1,
-    },{
+		 .name           = "gl-ar750s:white:power",
+		 .gpio           = GL_AR750S_GPIO_LED_POWER,
+		.default_state  = LEDS_GPIO_DEFSTATE_KEEP,
+		.active_low     = 1,
+   	 },{
+		 .name           = "gl-ar750s:white:usbpower",
+		 .gpio           = GL_AR750S_GPIO_USB_POWER,
+		.active_low     = 1,
+   	 },{
 		.name		= "gl-ar750s:white:wlan2g",
 		.gpio		= GL_AR750S_GPIO_LED_WLAN2G,
 		.active_low	= 1,
@@ -90,7 +120,19 @@ static struct gpio_keys_button gl_ar750s_gpio_keys[] __initdata = {
        },
 };
 
+static struct i2c_gpio_platform_data gl_ar750s_i2c_gpio_data = {
+        .sda_pin        = GL_AR750S_GPIO_I2C_SDA,
+        .scl_pin        = GL_AR750S_GPIO_I2C_SCL,
+};
 
+static struct platform_device gl_ar750s_i2c_gpio_device = {
+        .name           = "i2c-gpio",
+        .id             = 0,
+        .dev = {
+                .platform_data  = &gl_ar750s_i2c_gpio_data,
+	}
+
+};
 
 static struct ar8327_pad_cfg gl_ar750s_ar8327_pad0_cfg = {
 	.mode = AR8327_PAD_MAC_SGMII,
@@ -119,10 +161,9 @@ static struct mdio_board_info gl_ar750s_mdio0_info[] = {
 
 static void __init  gl_ar750s_setup(void)
 {
-	u8 *eeprom = (u8 *) KSEG1ADDR(0x1fff0000);
+	u8 *eeprom = (u8 *) KSEG1ADDR(0x1f050000);
 
-	ath79_register_m25p80(&gl_ar750s_flash_data);
-
+	ath79_register_spi(&gl_ar750s_spi_data, gl_ar750s_spi_info, 2);
 
 	ath79_init_mac(ath79_eth0_data.mac_addr,
 	               eeprom + GL_AR750S_MAC0_OFFSET, 0);
@@ -146,6 +187,7 @@ static void __init  gl_ar750s_setup(void)
 
 	ap91_pci_init(eeprom + GL_AR750S_PCI_CALDATA_OFFSET, NULL);
 
+	platform_device_register(&gl_ar750s_i2c_gpio_device);
 
 	ath79_register_leds_gpio(-1, ARRAY_SIZE(gl_ar750s_leds_gpio),
 	                         gl_ar750s_leds_gpio);
