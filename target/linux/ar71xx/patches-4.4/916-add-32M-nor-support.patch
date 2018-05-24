@@ -1,6 +1,29 @@
 --- a/drivers/mtd/spi-nor/spi-nor.c
 +++ b/drivers/mtd/spi-nor/spi-nor.c
-@@ -726,7 +726,7 @@ static const struct flash_info spi_nor_i
+@@ -186,7 +186,8 @@ static inline struct spi_nor *mtd_to_spi
+ static inline int set_4byte(struct spi_nor *nor, const struct flash_info *info,
+ 			    int enable)
+ {
+-	int status;
++	int status,count=0;
++	char config[2]={0,0};
+ 	bool need_wren = false;
+ 	u8 cmd;
+ 
+@@ -200,7 +201,11 @@ static inline int set_4byte(struct spi_n
+ 			write_enable(nor);
+ 
+ 		cmd = enable ? SPINOR_OP_EN4B : SPINOR_OP_EX4B;
+-		status = nor->write_reg(nor, cmd, NULL, 0);
++              	while( ((config[0] & CR_BY4)==0) && (++count<10) ){
++                        status = nor->write_reg(nor, cmd, NULL, 0);
++                        msleep(10);
++                        nor->read_reg(nor,SPINOR_RD_CFG,config,2);
++                }
+ 		if (need_wren)
+ 			write_disable(nor);
+ 
+@@ -726,7 +731,7 @@ static const struct flash_info spi_nor_i
  	{ "mx25u6435f",  INFO(0xc22537, 0, 64 * 1024, 128, SECT_4K) },
  	{ "mx25l12805d", INFO(0xc22018, 0, 64 * 1024, 256, 0) },
  	{ "mx25l12855e", INFO(0xc22618, 0, 64 * 1024, 256, 0) },
@@ -9,3 +32,21 @@
  	{ "mx25u25635f", INFO(0xc22539, 0, 64 * 1024, 512, 0) },
  	{ "mx25l25655e", INFO(0xc22619, 0, 64 * 1024, 512, 0) },
  	{ "mx66l51235l", INFO(0xc2201a, 0, 64 * 1024, 1024, SPI_NOR_QUAD_READ) },
+--- a/include/linux/mtd/spi-nor.h
++++ b/include/linux/mtd/spi-nor.h
+@@ -53,6 +53,7 @@
+ #define SPINOR_OP_RDID		0x9f	/* Read JEDEC ID */
+ #define SPINOR_OP_RDCR		0x35	/* Read configuration register */
+ #define SPINOR_OP_RDFSR		0x70	/* Read flag status register */
++#define SPINOR_RD_CFG           0x15    /* Read configuration register*/
+ 
+ /* 4-byte address opcodes - used on Spansion and some Macronix flashes. */
+ #define SPINOR_OP_READ4		0x13	/* Read data bytes (low frequency) */
+@@ -85,6 +86,7 @@
+ #define SR_BP0			BIT(2)	/* Block protect 0 */
+ #define SR_BP1			BIT(3)	/* Block protect 1 */
+ #define SR_BP2			BIT(4)	/* Block protect 2 */
++#define CR_BY4                  BIT(5)  /* 4Bit address mode */
+ #define SR_SRWD			BIT(7)	/* SR write protect */
+ 
+ #define SR_QUAD_EN_MX		BIT(6)	/* Macronix Quad I/O */
