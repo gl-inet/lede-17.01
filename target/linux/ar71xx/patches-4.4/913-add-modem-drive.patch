@@ -95,7 +95,31 @@
  	{QMI_GOBI_DEVICE(0x05c6, 0x9235)},	/* Top Global Gobi 2000 Modem device (VR306) */
 --- a/drivers/usb/serial/option.c
 +++ b/drivers/usb/serial/option.c
-@@ -676,6 +676,18 @@ static const struct option_blacklist_inf
+@@ -402,6 +402,23 @@ static void option_instat_callback(struc
+ 
+ #define NEOWAY_PRODUCT_N720                     0x8243
+ 
++#define LONGSUNG_PRODUCT_U9300C                 0x9b3c
++
++/* FORGE PRODUCT */
++#define FORGE_VENDOR_ID                         0x05c6
++
++#define FORGE_PRODUCT_SLM750                    0xf601
++
++/* NODECOM PRODUCT */
++#define NODECOM_VENDOR_ID                       0x1508
++
++#define NODECOM_PRODUCT_NL660                   0x1001
++
++/* NEOWAY PRODUCT */
++#define NEOWAY_VENDOR_ID                        0x2949
++
++#define NEOWAY_PRODUCT_N720                     0x8243
++
+ /* SpeedUp SU9800 usb 3g modem */
+ #define SPEEDUP_PRODUCT_SU9800			0x9800
+ 
+@@ -693,6 +710,18 @@ static const struct option_blacklist_inf
  };
  
  static const struct usb_device_id option_ids[] = {
@@ -114,7 +138,18 @@
  	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_COLT) },
  	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_RICOLA) },
  	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_RICOLA_LIGHT) },
-@@ -2072,6 +2084,9 @@ static struct usb_serial_driver option_1
+@@ -1904,6 +1933,10 @@ static const struct usb_device_id option
+ 	{ USB_DEVICE(FORGE_VENDOR_ID, FORGE_PRODUCT_SLM750) },
+ 	{ USB_DEVICE(NODECOM_VENDOR_ID, NODECOM_PRODUCT_NL660) },
+ 	{ USB_DEVICE(NEOWAY_VENDOR_ID, NEOWAY_PRODUCT_N720) },
++	{ USB_DEVICE(LONGCHEER_VENDOR_ID, LONGSUNG_PRODUCT_U9300C) },
++	{ USB_DEVICE(FORGE_VENDOR_ID, FORGE_PRODUCT_SLM750) },
++	{ USB_DEVICE(NODECOM_VENDOR_ID, NODECOM_PRODUCT_NL660) },
++	{ USB_DEVICE(NEOWAY_VENDOR_ID, NEOWAY_PRODUCT_N720) },
+ 	{ USB_DEVICE(HAIER_VENDOR_ID, HAIER_PRODUCT_CE100) },
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(HAIER_VENDOR_ID, HAIER_PRODUCT_CE81B, 0xff, 0xff, 0xff) },
+ 	/* Pirelli  */
+@@ -2093,6 +2126,9 @@ static struct usb_serial_driver option_1
  #ifdef CONFIG_PM
  	.suspend           = usb_wwan_suspend,
  	.resume            = usb_wwan_resume,
@@ -124,7 +159,7 @@
  #endif
  };
  
-@@ -2111,8 +2126,64 @@ static int option_probe(struct usb_seria
+@@ -2132,8 +2168,64 @@ static int option_probe(struct usb_seria
  	    iface_desc->bInterfaceClass != USB_CLASS_CDC_DATA)
  		return -ENODEV;
  
