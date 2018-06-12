@@ -70,21 +70,17 @@ def main(argv):
         return 1
 
     include_ipk = ""
-    exclude_ipk = ""
 
     for (k, v) in images.items():
         if image == k:
             include_ipk = v
 
     for (k, v) in profiles.items():
-        if profile == k:
-            i_ipk = v["include"]
-            e_ipk = v["exclude"]
-            include_ipk = include_ipk + " " + i_ipk
-            exclude_ipk = exclude_ipk + " " + e_ipk
+        if profile == k and v.has_key(image):
+            include_ipk = "%s %s" % (include_ipk, v[image])
 
-    check_call("make image PROFILE=%s VERSION=%s PACKAGES=\"%s\" REMOVE_PACKAGES=\"%s\" FILES=%s" % \
-            (profile, version, include_ipk, exclude_ipk, files), shell=True);
+    check_call("make image PROFILE=%s VERSION=%s PACKAGES=\"%s\" FILES=%s" % \
+            (profile, version, include_ipk, files), shell=True);
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
