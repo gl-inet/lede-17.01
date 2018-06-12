@@ -7,13 +7,12 @@ import logging
 from subprocess import check_call
 
 def usage(pname):
-    print "GL.iNet create released image utility"
-    print "Usage: " + pname + " <OPTIONS>"
+    print "GL.iNet tool"
+    print "Usage: " + pname + " [OPTIONS]"
     print ""
-    print " -i|--image          Which type image to create"
-    print " -p|--profile        Create image for which profile"
-    print " -v|--version        Released version number"
+    print " -t|--type           Image type"
     print " -f|--files          Files directory"
+    print " -p|--packages       Install with package 'name' and remove with '-name'"
     
 def main(argv):
     logging.basicConfig(format = '%(levelname)s: %(message)s')
@@ -21,66 +20,69 @@ def main(argv):
 
     try:
         (opts, args) = getopt.getopt(argv[1:], 
-                "hp:v:i:f:", 
-                [ "help", "profile=", "version=", "image=", "files=" ])
+                "ht:f:p:", 
+                [ "help", "type=", "files=", "packages=" ])
     except getopt.GetoptError as e:
 	usage(pname)
 	return 1
 
-    image= None
-    profile = None
-    version = None
-    files = ""
+    image_type = "standard"
+    files_dir = None
+    packages = ""
+    files_dir = ""
 
     for (o, v) in opts:
         if o in ("-h", "--help"):
             usage(pname)
             return 0
-        if o in ("-i", "--image"):
-            image = v
-        if o in ("-p", "--profile"):
-            profile = v
-        if o in ("-v", "--version"):
-            version = v
+        if o in ("-t", "--type"):
+            image_type = v
         if o in ("-f", "--files"):
-            files = v
-
-    if image is None or profile is None or version is None:
-        logging.error("No (image|profile|version) specified, try run with -h")
-        return 1
+            files_dir = v
+        if o in ("-p", "--packages"):
+            packages = v
 
     filename = "images.json"
 
     try:
-        with open(filename) as fd:
+        with open(filename) as fd: 
             data = json.load(fd)
             fd.close()
     except:
-        logging.error("Failed to parse jsonfile[%s]" % filename)
+        logging.error("Failed to parse %s, maybe missing file?" % filename)
         return 1
 
-    images = data['images']
+    if not data.has_key("version"):
+        logging.error("No version specified in %s" % filename)
+        return 1
+
+    if not data.has_key("profiles"):
+        logging.error("No profiles specified in %s" % filename)
+        return 1
+
+    if not data.has_key("types"):
+        logging.error("No types specified in %s" % filename)
+        return 1
+
+    ver = data['version']
     profiles = data['profiles']
 
-    if not image in images.keys():
-        logging.error("Specified image[%s] is not in jsonfile[%s]" % (image, filename))
-        return 1
-    if not profile in profiles.keys():
-        logging.error("Specified profile[%s] is not in jsonfile[%s]" % (profile, filename))
+    if image_type not in data['types'].keys():
+        logging.error("No found %s in %s" % (image_type, filename))
         return 1
 
-    include_ipk = ""
+    if packages is not None:
+        packages = packages + " " + data['types'][image_type]
+    else:
+        packages = data['types'][image_type]
 
-    for (k, v) in images.items():
-        if image == k:
-            include_ipk = v
+    for profile in profiles:
+        extend_ipk = ""
+        if data.has_key("extend") and data["extend"].has_key(profile):
+            extend_ipk = data["extend"][profile]
 
-    for (k, v) in profiles.items():
-        if profile == k and v.has_key(image):
-            include_ipk = "%s %s" % (include_ipk, v[image])
-
-    check_call("make image PROFILE=%s VERSION=%s PACKAGES=\"%s\" FILES=%s" % \
-            (profile, version, include_ipk, files), shell=True);
+        check_call("make image PROFILE=%s VERSION=%s PACKAGES=\"%s %s\" FILES=%s" % \
+                (profile, ver, packages, extend_ipk, files_dir), shell=True);
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
