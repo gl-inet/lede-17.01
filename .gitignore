@@ -29,4 +29,5 @@ firmware.yml
 scripts/gl_image
 /releases
 /package/gli-pri
+/package/qca
 /.pc
