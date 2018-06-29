@@ -155,18 +155,21 @@ LINUX_RECONF_DIFF = $(call __linux_confcmd,$(filter-out $(LINUX_RECONFIG_TARGET)
 ifeq ($(DUMP),1)
   BuildTarget=$(BuildTargets/DumpCurrent)
 
-  CPU_CFLAGS = -Os -pipe
+  CPU_CFLAGS = -O2 -pipe
   ifneq ($(findstring mips,$(ARCH)),)
     ifneq ($(findstring mips64,$(ARCH)),)
       CPU_TYPE ?= mips64
     else
       CPU_TYPE ?= mips32
     endif
-    CPU_CFLAGS += -mno-branch-likely
+    CPU_CFLAGS += -mno-branch-likely -mno-mips16 -mno-interlink-compressed -msym32
     CPU_CFLAGS_mips32 = -mips32 -mtune=mips32
     CPU_CFLAGS_mips64 = -mips64 -mtune=mips64 -mabi=64
-    CPU_CFLAGS_24kc = -mips32r2 -mtune=24kc
-    CPU_CFLAGS_74kc = -mips32r2 -mtune=74kc
+    CPU_CFLAGS_24kc = -march=24kc
+    CPU_CFLAGS_24kec = -march=24kec
+    CPU_CFLAGS_34kc = -march=34kc
+    CPU_CFLAGS_74kc = -march=74kc
+    CPU_CFLAGS_1004kc = -march=1004kc
     CPU_CFLAGS_octeon = -march=octeon -mabi=64
   endif
   ifeq ($(ARCH),i386)

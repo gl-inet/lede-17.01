@@ -1,0 +1,14 @@
+--- a/arch/mips/Makefile
++++ b/arch/mips/Makefile
+@@ -87,9 +87,9 @@ all-$(CONFIG_SYS_SUPPORTS_ZBOOT)+= vmlin
+ # machines may also.  Since BFD is incredibly buggy with respect to
+ # crossformat linking we rely on the elf2ecoff tool for format conversion.
+ #
+-cflags-y			+= -G 0 -mno-abicalls -fno-pic -pipe -mno-branch-likely
++cflags-y			+= -march=24kc -mno-abicalls -fno-pic -pipe -mno-branch-likely -mno-mips16 -mno-interlink-compressed -msym32 -fno-caller-saves -fomit-frame-pointer
+ cflags-y			+= -msoft-float
+-LDFLAGS_vmlinux			+= -G 0 -static -n -nostdlib --gc-sections
++LDFLAGS_vmlinux			+= -static -n -nostdlib --gc-sections
+ ifdef CONFIG_64BIT
+ KBUILD_AFLAGS_MODULE		+= -mlong-calls
+ KBUILD_CFLAGS_MODULE		+= -mlong-calls
