@@ -178,17 +178,15 @@
  /*
   * Limit the use of PFMEMALLOC reserves to those protocols that implement
   * the special handling of PFMEMALLOC skbs.
-@@ -3870,6 +3879,9 @@ static inline int nf_ingress(struct sk_b
+@@ -3870,6 +3879,7 @@ static inline int nf_ingress(struct sk_b
  	return 0;
  }
  
-+int (*athrs_fast_nat_recv)(struct sk_buff *skb) __rcu __read_mostly;
-+EXPORT_SYMBOL_GPL(athrs_fast_nat_recv);
 +
  static int __netif_receive_skb_core(struct sk_buff *skb, bool pfmemalloc)
  {
  	struct packet_type *ptype, *pt_prev;
-@@ -3878,6 +3890,7 @@ static int __netif_receive_skb_core(stru
+@@ -3878,6 +3888,7 @@ static int __netif_receive_skb_core(stru
  	bool deliver_exact = false;
  	int ret = NET_RX_DROP;
  	__be16 type;
@@ -196,26 +194,16 @@
  
  	net_timestamp_check(!netdev_tstamp_prequeue, skb);
  
-@@ -3890,7 +3903,17 @@ static int __netif_receive_skb_core(stru
+@@ -3890,7 +3901,7 @@ static int __netif_receive_skb_core(stru
  		skb_reset_transport_header(skb);
  	skb_reset_mac_len(skb);
  
 -	pt_prev = NULL;
-+	rcu_read_lock();
-+
-+       fast_recv = rcu_dereference(athrs_fast_nat_recv);
-+       if (fast_recv) {
-+               if (fast_recv(skb)) {
-+                       rcu_read_unlock();
-+                       return NET_RX_SUCCESS;
-+               }
-+       }
-+
 +       pt_prev = NULL;
  
  another_round:
  	skb->skb_iif = skb->dev->ifindex;
-@@ -3904,6 +3927,12 @@ another_round:
+@@ -3904,6 +3915,12 @@ another_round:
  			goto out;
  	}
  
@@ -228,14 +216,6 @@
  #ifdef CONFIG_NET_CLS_ACT
  	if (skb->tc_verd & TC_NCLS) {
  		skb->tc_verd = CLR_TC_NCLS(skb->tc_verd);
-@@ -4019,6 +4048,7 @@ drop:
- 	}
- 
- out:
-+	rcu_read_unlock();
- 	return ret;
- }
- 
 --- a/net/netfilter/nf_conntrack_core.c
 +++ b/net/netfilter/nf_conntrack_core.c
 @@ -1817,6 +1817,7 @@ int nf_conntrack_init_net(struct net *ne
